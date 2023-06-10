@@ -1,4 +1,3 @@
-import csv
 import math
 import numpy as np
 from scipy.io import wavfile
@@ -7,7 +6,7 @@ from scipy.io import wavfile
 
 def filterSignal(samplerate, wav_data):
     # define parameters
-    signalLength = wav_data.shape[0]
+    signal_length = wav_data.shape[0]
     num_channels = wav_data.shape[1]
     filterLength = math.ceil(30. * 1. / cutofffreq * samplerate)
     Nfft = 2 ** math.ceil(math.log2(filterLength + signalLength))
@@ -18,6 +17,7 @@ def filterSignal(samplerate, wav_data):
     flt_timedomain = np.hamming(filterLength) * flt_sinc
     flt_padded = np.append(flt_timedomain, np.zeros(Nfft - filterLength))
     flt_FT = np.fft.fft(flt_padded)
+    print("flt_FT: ", flt_FT)
 
     # process channels
     out_data = []
@@ -26,9 +26,15 @@ def filterSignal(samplerate, wav_data):
         data_padded = np.append(data_raw, np.zeros(Nfft - signalLength))
         data_FT = np.fft.fft(data_padded)
 
+        print("Channel ", channel, " data_FT: ", data_FT)
+
         conv_FT = flt_FT * data_FT
+
+        print("Channel ", channel, " conv_FT: ", conv_FT)
         conv_result = np.real(np.fft.ifft(conv_FT))
-        
+        out_channel = conv_result.astype(np.int16)
+
+
 
         if channel == 0:
             out_data = conv_result
@@ -38,17 +44,15 @@ def filterSignal(samplerate, wav_data):
     return out_data
 
 
-#inputpath = input("Path to WAV file" + '\n')
-inputpath = "C:/Users/kai/git/tinf20b3-digitalesprachverarbeitung-programmentwurf/tiefpassfilter/data/oboe.wav"
-cutofffreq = 1000 #input("Cutoff Frequency" + '\n')
-cutofffreq = int(cutofffreq)
-#outputpath = input("Path for output" + '\n')
-outputpath = "C:/Users/kai/git/tinf20b3-digitalesprachverarbeitung-programmentwurf/tiefpassfilter/data/output.wav"
+input_path = input("Path to WAV file" + '\n')
+fc = int(input("Cutoff Frequency" + '\n'))
+output_path = input("Path for output" + '\n')
+
 
 try:
     samplerate, wav = wavfile.read(inputpath)
 except:
-    print("Failed to load '%s'" % inputpath)
+    print("Failed to load '%s'" % input_path)
     exit(1)
 
 filtered_data = filterSignal(samplerate, wav)
